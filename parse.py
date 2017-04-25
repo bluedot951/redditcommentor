@@ -1,10 +1,12 @@
-import json
+import simplejson as json
 
 # yaml returns dictionaries of strings (rather than unicode, as json does), but seems 200x slower...
 import yaml
 import time
 import collections
 import random
+
+import re
 
 class Comment(object):
 	def __init__(self, text, subreddit, score, gilded, controversiality):
@@ -111,6 +113,14 @@ def cleanup(body):
 	# print "\n\n"
 	body = body.replace("\r", " ")
 	body = body.replace("\n", " ")
+
+	body = re.sub(r'\[.*\]\(.*\)', '', body)
+
+	body = body.replace(")", " ")
+	body = body.replace("(", " ")
+	body = body.replace("&gt;", " ")
+	body = body.replace("&lt;", " ")
+
 	# print "cleaned", body
 	return body
 
@@ -127,10 +137,11 @@ def makeComment(revMap):
 	return c[:-1]
 
 def makeBiComment(revMap, revBiMap):
-	randNum = random.random()
-	key = floorKey(revMap, randNum)
-	token = revMap[key]
+	# randNum = random.random()
+	# key = floorKey(revMap, randNum)
+	# token = revMap[key]
 	c = ""
+	token = "[SOC]"
 
 	while token != "[EOC]":
 		c += token + " "
@@ -142,12 +153,19 @@ def makeBiComment(revMap, revBiMap):
 a = time.time()
 
 data = open("RC_2005-12.txt", "r").read().split("\n")
+data2 = open("RC_2006-05.txt", "r").read().split("\n")
 # data = open("test.txt", "r").read().split("\n")
 
+
+data.extend(data2)
 
 
 strdata = '[' + ','.join(data) + ']'
 
+# print strdata[-10:]
+
+
+# print len(strdata)
 
 parsedData = json.loads(strdata)
 
@@ -174,7 +192,7 @@ for comm in parsedData:
 	# print "body in for"
 	# print comm["body"]
 	if comm["body"] != "[deleted]" and comm["body"] != "[removed]":
-		c = Comment(comm["body"] + " [EOC]", comm["subreddit"], comm["score"], comm["gilded"], comm["controversiality"])
+		c = Comment("[SOC] " + comm["body"] + " [EOC]", comm["subreddit"], comm["score"], comm["gilded"], comm["controversiality"])
 		comments.append(c)
 
 # print best
@@ -192,7 +210,7 @@ for comm in comments:
 # for comm in comments:
 # 	print comm.text
 
-# comments = comments[0:10]
+# comments = comments[0:10]fff
 
 # c = comments[0]
 
