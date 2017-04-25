@@ -21,6 +21,18 @@ class Comment(object):
 
 	__repr__ = __str__
 
+class Tree(object):
+
+	def __init__(self):
+		self.children = {}
+
+	def __add__(self, word):
+
+
+	def __remove__(self, key):
+		raise Exception('Too bad!')
+
+
 # converts keys and values of dictionary from unicode to utf-8
 def convert(data):
 	newData = []
