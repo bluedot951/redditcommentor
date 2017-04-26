@@ -1,40 +1,56 @@
 import simplejson as json
-
-# yaml returns dictionaries of strings (rather than unicode, as json does), but seems 200x slower...
-import yaml
-import time
-import collections
-import random
-
 import re
+import collections
 
+# A Comment is an abstraction of a Reddit comment. It contains key information
+# about that comment's data, such as its actual body, which subreddit it was
+# posted to, its score, whether or not it was gilded, and its controversiality
+# ratio (usually a variation of the upvotes to downvotes ratio).
+#
+# A constructor is provided for comment parsing during the JSON decoding process.
 class Comment(object):
-	def __init__(self, text, subreddit, score, gilded, controversiality):
-		self.text = text
-		self.subreddit = subreddit
-		self.score = int(score)
-		self.gilded = int(gilded)
-		self.controversiality = int(controversiality)
-	def __str__(self):
-		return str( (self.subreddit, self.text, self.score) )
-		# return str( (self.subreddit, self.score) )
 
-	__repr__ = __str__
+	# Constructor for a Comment based on the parsed JSON fields.
+  def __init__(self, body, subreddit="reddit.com", score=1, gilded=0, controversiality=0):
+    self.body = body
+    self.subreddit = subreddit
+    self.score = int(score)
+    self.gilded = int(gilded)
+    self.controversiality = int(controversiality)
 
-class Tree(object):
+  # The so-called 'toString' method that prints out the Comment representation.
+  def __str__(self):
+    return "Subreddit: " + self.subreddit + "\nText: " + self.body + "\nScore: " + str(self.score)
 
-	def __init__(self):
-		self.children = {}
+  __repr__ = __str__
 
-	def __add__(self, word):
+# Defines a custom error to be used when there is trouble with parsing JSON.
+class ParseError(Exception):
+  pass
 
+# Defines a custom error to be used when there is trouble with converting data.
+class TokenizeError(Exception):
+  pass
 
-	def __remove__(self, key):
-		raise Exception('Too bad!')
+# Generates a single JSON object using the specified JSON files as input.
+#   - [files]: A list of file names from which the data should be extracted.
+# Raises: ParseError if any of the files are not valid JSON.
+def getData(files):
+	strData = []
+	for file in files:
+		tempStrData = open(file, "r").read().split("\n")
+		strData.extend(tempStrData)
+	jsonData = '[' + ','.join(strData) + ']'
+	try:
+		data = json.loads(jsonData)
+		return data
+	except JSONDecodeError:
+		raise ParseError("There was an error in decoding one of the input files.")
 
-
-# converts keys and values of dictionary from unicode to utf-8
-def convert(data):
+# Converts the specified JSON object into a UTF-8 compatible equivalent.
+#   - [data]: The JSON object to map from Unicode to UTF-8.
+# Raises: TokenizeError if any of the files are not valid JSON.
+def convertToUTF(data):
 	newData = []
 	for i, item in enumerate(data):
 		try:
@@ -42,226 +58,44 @@ def convert(data):
 			for k in item:
 				newDict[str(k)] = str(item[k])
 			newData.append(newDict)
-
 		except:
-			pass
-			# print "exception!", i
+			pass # TODO: This is just for now. We should handle Unicode later.
+			# raise TokenizeError("Unrecognized token: %s" % i)
 	return newData
 
-def floorKey(d, key):
-	if key in d:
-		return key
-	return max(k for k in d if k < key)
+# Creates a Comment object out of the specified UTF-8 compatible JSON object
+# (i.e. just a plain old dictionary).
+#   - [utfData]: A list of UTF-8 compatible JSON dictionaries.
+def toComment(utfData):
+	comments = []
 
-def getUnigrams(commentList):
-	unigrams = {}
-	totCount = 0
-	for comment in commentList:
-		words = comment.text.split()
-		totCount += len(words)
+	for comm in utfData:
+		# Do not include any comments that were deleted or removed by a moderator.
+		if comm["body"] != "[deleted]" and comm["body"] != "[removed]":
+			body = "[SOC] " + comm["body"] + " [EOC]"
+			c = Comment(body, comm["subreddit"], comm["score"], comm["gilded"], comm["controversiality"])
+			comments.append(c)
 
-		for word in words:
-			if word not in unigrams:
-				unigrams[word] = 0
-			unigrams[word] += 1
-	for u in unigrams:
-		unigrams[u] /= float(totCount)
+	return comments
 
-	return unigrams
-
-def getRevUniMap(unigrams):
-	curProb = 0.0
-
-	reverseMap = {}
-
-	for u in unigrams:
-		reverseMap[curProb] = u
-		curProb+=unigrams[u]
-
-	return reverseMap
-
-def getBigrams(commentList):
-	bigrams = {}
-	totCount = 0
-	for comment in commentList:
-		words = comment.text.split()
-		
-		for i in range(len(words)-1):
-			word = words[i]
-			nextWord = words[i+1]
-
-			if word not in bigrams:
-				bigrams[word] = {}
-			innerDict = bigrams[word]
-
-			if nextWord not in innerDict:
-				innerDict[nextWord] = 0
-			innerDict[nextWord] += 1
-
-			bigrams[word] = innerDict
-
-	for bd in bigrams:
-		mydict = bigrams[bd]
-		total = sum(mydict.values())
-		for w in mydict:
-			mydict[w] /= float(total)
-
-		bigrams[bd] = mydict
-
-	return bigrams
-
-def getRevBiMap(bigrams):
-
-	reverseMap = {}
-
-	for bd in bigrams:
-		reverseMap[bd] = getRevUniMap(bigrams[bd])
-
-	return reverseMap
-
-def cleanup(body):
-	# print "cleaning"
-	# print body
-	# print "\n\n"
+# Cleans up the body of a comment by removing any new lines, form feeds, links,
+# parentheses, and HTML codes (e.g. &nbsp;, &gt;, etc.).
+#   - [body]: The string corresponding to the body of a comment.
+def sanitize(body):
+	# Remove newlines
 	body = body.replace("\r", " ")
 	body = body.replace("\n", " ")
 
+	# Remove links
 	body = re.sub(r'\[.*\]\(.*\)', '', body)
 
+	# Remove parentheses
 	body = body.replace(")", " ")
 	body = body.replace("(", " ")
+
+	# Remove HTML codes
 	body = body.replace("&gt;", " ")
 	body = body.replace("&lt;", " ")
+	body = body.replace("&amp;", " ")
 
-	# print "cleaned", body
 	return body
-
-def makeComment(revMap):
-	randNum = random.random()
-	key = floorKey(revMap, randNum)
-	token = revMap[key]
-	c = ""
-	while token != "[EOC]":
-		c += token + " "
-		randNum = random.random()
-		key = floorKey(revMap, randNum)
-		token = revMap[key]
-	return c[:-1]
-
-def makeBiComment(revMap, revBiMap):
-	# randNum = random.random()
-	# key = floorKey(revMap, randNum)
-	# token = revMap[key]
-	c = ""
-	token = "[SOC]"
-
-	while token != "[EOC]":
-		c += token + " "
-		randNum = random.random()
-		key = floorKey(revBiMap[token], randNum)
-		token = revBiMap[token][key]
-	return c[:-1]
-
-a = time.time()
-
-data = open("RC_2005-12.txt", "r").read().split("\n")
-data2 = open("RC_2006-05.txt", "r").read().split("\n")
-# data = open("test.txt", "r").read().split("\n")
-
-
-data.extend(data2)
-
-
-strdata = '[' + ','.join(data) + ']'
-
-# print strdata[-10:]
-
-
-# print len(strdata)
-
-parsedData = json.loads(strdata)
-
-parsedData = convert(parsedData)
-
-
-c = Comment("hello world", "subreddit", 10, 0, 0)
-# print c
-
-
-
-maxUps = -1
-best = None
-
-comments = []
-
-for comm in parsedData:
-	up = int(comm['ups'])
-	if up > maxUps:
-		maxUps = up
-		best = comm
-	# body = comm["body"]
-	# print "comm", comm
-	# print "body in for"
-	# print comm["body"]
-	if comm["body"] != "[deleted]" and comm["body"] != "[removed]":
-		c = Comment("[SOC] " + comm["body"] + " [EOC]", comm["subreddit"], comm["score"], comm["gilded"], comm["controversiality"])
-		comments.append(c)
-
-# print best
-
-for comm in comments:
-	comm.text = cleanup(comm.text)
-
-
-# comments = sorted(comments, key = lambda comm: comm.score)
-
-
-# bodies = [comm.text for comm in comments]
-
-# print comments
-# for comm in comments:
-# 	print comm.text
-
-# comments = comments[0:10]fff
-
-# c = comments[0]
-
-# c.body = "a man a plan a canal panama"
-
-# comments = [Comment("a man a plan a canal panama [EOC]", "hi", 0, 0, 0)]
-
-# print comments
-revUniMap = getRevUniMap(getUnigrams(comments))
-
-bg = getBigrams(comments)
-
-# print bg
-revBiMap = getRevBiMap(bg)
-
-# print revBiMap
-
-total = 0
-
-print makeBiComment(revUniMap, revBiMap)
-
-1/0
-
-for i in range(1):
-	c = makeComment(revMap)
-	print c
-	total += len(c.split())
-
-print total/1.
-
-mykeys = list(revMap.keys())
-
-mykeys.sort()
-
-print mykeys
-
-# for i in mykeys:
-# 	print i, revMap[i]
-
-b = time.time()
-
-print "Time: %s" % (b-a)
