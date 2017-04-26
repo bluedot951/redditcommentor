@@ -80,9 +80,10 @@ def toComment(utfData):
 
 # Cleans up the body of a comment by removing any new lines, form feeds, links,
 # parentheses, and HTML codes (e.g. &nbsp;, &gt;, etc.).
-#   - [body]: The string corresponding to the body of a comment.
-def sanitize(body):
+#   - [comment]: The string corresponding to a comment itself (i.e. NOT its body).
+def sanitize(comment):
 	# Remove newlines
+	body = comment.body
 	body = body.replace("\r", " ")
 	body = body.replace("\n", " ")
 

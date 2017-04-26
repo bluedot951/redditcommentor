@@ -8,7 +8,7 @@ from pipetools import pipe
 from pipetools.utils import foreach
 
 # Number of comments to generate.
-NUM_COMMENTS = 10
+NUM_COMMENTS = 1
 
 # Testing arena for the n-gram comment generation.
 def main(argv):
@@ -23,7 +23,7 @@ def main(argv):
     | getData
     | convertToUTF
     | toComment
-    | foreach(lambda c: sanitize(c.body))
+    | foreach (sanitize)
     | list
     | getBigrams
     | getRevBiMap
