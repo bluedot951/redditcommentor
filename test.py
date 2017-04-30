@@ -17,8 +17,9 @@ def main(argv):
   start = time.time()
 
   # The list of files to learn the model on.
-  files = ["data/2005-12.txt","data/2006-05.txt"]
-  # files = ["test/test.txt"]
+  files = ["data/2005-12.txt"]
+  for i in range(1,13):
+    files.append("data/2006-" + str(i).zfill(2) + ".txt")
 
   # OCaml-style composition to create a function from files to a reverse-map.
   makeTree = (pipe
