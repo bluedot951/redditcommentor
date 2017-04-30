@@ -1,5 +1,74 @@
 from parse import *
 
+class Tree(object):
+  def __init__(self, word):
+    self.word = word
+    self.forwardMap = {} # Mapping from word to (tree, count)
+    self.reverseMap = {} # Mapping from probabilities to trees
+
+  def printReverseMap(self):
+    return str(self.reverseMap)
+
+  def __str__(self):
+    return "({0}, {1})".format(self.word, str(self.reverseMap))
+
+  __repr__ = __str__
+
+def createSubTree(tree, key):
+  if key in tree.forwardMap:
+    return tree.forwardMap[key]
+  else:
+    tree.forwardMap[key] = [Tree(key), 0]
+
+
+def getTree(n, commentList):
+  root = Tree("root")
+
+  for comment in commentList:
+    words = comment.split()
+    sublists = [words[i:i+n] for i in xrange(len(words)-n+1)]
+
+    for sublist in sublists:
+      myPointer = root
+      for word in sublist:
+        # print word, myPointer
+        createSubTree(myPointer, word)
+        myPointer.forwardMap[word][1] += 1
+        myPointer = myPointer.forwardMap[word][0]
+
+  return root
+
+def getReverseTree(tree):
+  if len(tree.forwardMap) == 0:
+    return
+
+  curProb = 0.0
+
+  for sub in tree.forwardMap:
+    tree.reverseMap[curProb] = tree.forwardMap[sub][0]
+    curProb += tree.forwardMap[sub][1]
+
+  for sub in tree.forwardMap:
+    getReverseTree(tree.forwardMap[sub][0])
+
+  # return reverseMap
+
+
+def normalize(tree):
+  if len(tree.forwardMap) == 0:
+    return
+
+  tot = 0
+  for sub in tree.forwardMap:
+    tot += tree.forwardMap[sub][1]
+
+  for sub in tree.forwardMap:
+    tree.forwardMap[sub][1] /= float(tot)
+
+  for sub in tree.forwardMap:
+    normalize(tree.forwardMap[sub][0])
+
+
 # Returns the key if it is in the dictionary or the closest approximation if it
 # is not in the dictionary.
 #   - [d]: The dictionary in which to search.
