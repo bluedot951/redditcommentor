@@ -38,8 +38,9 @@ class TokenizeError(Exception):
 def getData(files):
 	strData = []
 	for file in files:
-		tempStrData = open(file, "r").read().split("\n")[:-1]
-		strData.extend(tempStrData)
+		with open(file, "r") as myf:
+			tempStrData = myf.read().split("\n")[:-1]
+			strData.extend(tempStrData)
 	jsonData = '[' + ','.join(strData) + ']'
 	try:
 		data = json.loads(jsonData)
