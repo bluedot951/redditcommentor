@@ -9,7 +9,7 @@ from pipetools.utils import foreach
 
 # Number of comments to generate.
 NUM_COMMENTS = 1
-N = 5
+N = 1
 
 # Testing arena for the n-gram comment generation.
 def main(argv):

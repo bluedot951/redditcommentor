@@ -24,7 +24,9 @@ def createSubTree(tree, key):
 def getTree(n, commentList):
   root = Tree("root")
 
-  for comment in commentList:
+  for (i, comment) in enumerate(commentList):
+    if i % 1000 == 0:
+      print "getTree: processing {0} of {1}".format(i, len(commentList))
     words = comment.split()
     sublists = [words[i:i+n] for i in xrange(len(words)-n+1)]
 
