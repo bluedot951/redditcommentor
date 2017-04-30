@@ -9,6 +9,7 @@ from pipetools.utils import foreach
 
 # Number of comments to generate.
 NUM_COMMENTS = 1
+N = 5
 
 # Testing arena for the n-gram comment generation.
 def main(argv):
@@ -17,24 +18,28 @@ def main(argv):
 
   # The list of files to learn the model on.
   files = ["data/2005-12.txt","data/2006-05.txt"]
+  # files = ["test/test.txt"]
 
   # OCaml-style composition to create a function from files to a reverse-map.
-  makeMap = (pipe
+  makeTree = (pipe
     | getData
     | convertToUTF
     | toComment
     | foreach (sanitize)
     | list
-    | getBigrams
-    | getRevBiMap
+    | (lambda x: getTree(N, x))
+    | normalize
+    | getReverseTree
   )
 
   # Only create the map once to avoid repeated computation.
-  revMap = makeMap(files)
+  revTree = makeTree(files)
+
+  # print "revTree", revTree
 
   # Generate NUM_COMMENTS comments.
   for i in range(NUM_COMMENTS):
-    body = makeBiComment(revMap)
+    body = makeNComment(N, revTree)
     comment = Comment(body)
     print(comment)
 

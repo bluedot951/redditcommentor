@@ -33,3 +33,28 @@ def makeBiComment(revBiMap):
 
   # Will always be at least just '', but removes "[SOC]" and " " from string.
   return c[6:-1]
+
+
+# n < m, where m was used to construct tree
+def makeNComment(n, tree):
+  c = []
+  token = "[SOC]"
+
+  while token != "[EOC]":
+    # print "token:", token
+
+    c.append(token)
+    randNum = random.random()
+
+    prevs = c[-n+1:]
+
+    myPointer = tree
+
+    for word in prevs:
+      myPointer = myPointer.forwardMap[word][0]
+
+    key = floorKey(myPointer.reverseMap, randNum)
+
+    token = myPointer.reverseMap[key].word
+
+  return " ".join(c[1:])

@@ -51,8 +51,7 @@ def getReverseTree(tree):
   for sub in tree.forwardMap:
     getReverseTree(tree.forwardMap[sub][0])
 
-  # return reverseMap
-
+  return tree
 
 def normalize(tree):
   if len(tree.forwardMap) == 0:
@@ -67,6 +66,8 @@ def normalize(tree):
 
   for sub in tree.forwardMap:
     normalize(tree.forwardMap[sub][0])
+
+  return tree
 
 
 # Returns the key if it is in the dictionary or the closest approximation if it
