@@ -1,76 +1,112 @@
 from parse import *
+from tqdm import tqdm
 
+# A Tree is an abstraction that represents N-way trees in general. It keeps
+# track of its children in two different ways, both of which use dictionaries:
+#   1. A forward mapping from words to a tuple of (subtree, count).
+#   2. A reverse mapping from probabilities to subtrees. No words here.
+# Each Tree node also has a word associated with it.
+#
+# A constructor is provided for initialization.
 class Tree(object):
+
+  # Constructor for the Tree based on a word to set as the root. Usually [SOC].
   def __init__(self, word):
     self.word = word
     self.forwardMap = {} # Mapping from word to (tree, count)
     self.reverseMap = {} # Mapping from probabilities to trees
 
-  def printReverseMap(self):
-    return str(self.reverseMap)
-
+  # The so-called 'toString' method that prints out the Tree representation.
   def __str__(self):
     return "({0}, {1})".format(self.word, str(self.reverseMap))
 
   __repr__ = __str__
 
+# Creates a subtree in the specified Tree by using the specified key as the
+# word for that node. The subtree's mappings are empty.
+#   - [tree]: The tree structure in which the subtree should be created.
+#   - [key]:  The word to insert for the subtree that will be created.
 def createSubTree(tree, key):
   if key in tree.forwardMap:
     return tree.forwardMap[key]
   else:
     tree.forwardMap[key] = [Tree(key), 0]
 
-
+# Converts the specified comment list into a gram-tree based on the specified n
+# value. The forward mapping is filled in at each level, and the returned Tree
+# has empty mappings at each of its leaves.
+#   - [n]:           The number of grams to use when generating the Tree.
+#   - [commentList]: The list of comments from which the Tree is to be created.
 def getTree(n, commentList):
+  # Initialize an empty Tree. The initial word is always "root".
   root = Tree("root")
-
-  for (i, comment) in enumerate(commentList):
-    if i % 1000 == 0:
-      print "getTree: processing {0} of {1}".format(i, len(commentList))
+  
+  # Taqadum (`tqdm`) will handle the progress bar.
+  for (i, comment) in enumerate(tqdm(commentList)):
+    # Generate the list of all possible n-grams (consecutive sublists):
     words = comment.split()
-    sublists = [words[i:i+n] for i in xrange(len(words)-n+1)]
+    ngrams = [words[i:i+n] for i in xrange(len(words)-n+1)]
 
-    for sublist in sublists:
-      myPointer = root
-      for word in sublist:
-        # print word, myPointer
-        createSubTree(myPointer, word)
-        myPointer.forwardMap[word][1] += 1
-        myPointer = myPointer.forwardMap[word][0]
+    # Iterate through the list of all possible n-grams:
+    for ngram in ngrams:
+      # Walk down the tree using a referenced pointer.
+      tempTree = root
 
+      for word in ngram:
+        createSubTree(tempTree, word)
+        tempTree.forwardMap[word][1] += 1
+        tempTree = tempTree.forwardMap[word][0]
+
+  # Return the created Tree, not the referenced pointer.
   return root
 
-def getReverseTree(tree):
-  if len(tree.forwardMap) == 0:
-    return
-
-  curProb = 0.0
-
-  for sub in tree.forwardMap:
-    tree.reverseMap[curProb] = tree.forwardMap[sub][0]
-    curProb += tree.forwardMap[sub][1]
-
-  for sub in tree.forwardMap:
-    getReverseTree(tree.forwardMap[sub][0])
-
-  return tree
-
+# Normalizes the specified tree structure's forward mapping by moving the counts
+# to probabilities. Recursive.
+#   - [tree]: The tree whose forward mapping is to be normalized.
 def normalize(tree):
+
+  # Basis case.
   if len(tree.forwardMap) == 0:
     return
 
+  # Recursive case.
   tot = 0
   for sub in tree.forwardMap:
     tot += tree.forwardMap[sub][1]
 
+  # Walk down the subtrees and normalize the counts on this level.
   for sub in tree.forwardMap:
     tree.forwardMap[sub][1] /= float(tot)
 
+  # Recursively consider the list of subtrees for each subtree on this level.
   for sub in tree.forwardMap:
     normalize(tree.forwardMap[sub][0])
 
   return tree
 
+# Fills in the reverse mapping for the specified gram-tree by using its forward
+# mapping as a guide. The numbers in the forward tree are assumed to be
+# normalized, i.e. probabilities rather than counts. Recursive.
+#   - [tree]: The gram-tree to traverse and generate the reverse mapping for.
+def getReverseTree(tree):
+
+  # Basis case.
+  if len(tree.forwardMap) == 0:
+    return
+
+  # Recursive case.
+  curProb = 0.0
+
+  # Walk down the subtrees and fill in the reverse mappings on this level.
+  for sub in tree.forwardMap:
+    tree.reverseMap[curProb] = tree.forwardMap[sub][0]
+    curProb += tree.forwardMap[sub][1]
+
+  # Recursively consider the list of subtrees for each subtree on this level.
+  for sub in tree.forwardMap:
+    getReverseTree(tree.forwardMap[sub][0])
+
+  return tree
 
 # Returns the key if it is in the dictionary or the closest approximation if it
 # is not in the dictionary.
