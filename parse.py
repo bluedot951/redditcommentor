@@ -82,7 +82,7 @@ def toComment(utfData):
   for comm in tqdm(utfData):
     # Do not include any comments that were deleted or removed by a moderator.
     if comm["body"] != "[deleted]" and comm["body"] != "[removed]":
-      body = "[SOC] " + comm["body"] + " [EOC]"
+      body = "[SOC] " + comm["body"]
       c = Comment(body, comm["subreddit"], comm["score"], comm["gilded"], comm["controversiality"])
       comments.append(c)
 
@@ -108,6 +108,11 @@ def sanitize(comment):
   body = body.replace("&gt;", " ")
   body = body.replace("&lt;", " ")
   body = body.replace("&amp;", " ")
+
+  # Remove punctuation
+  body = body.replace(",", " ")
+  body = body.replace(";", " ")
+  body = body.replace(".", " ")
 
   comment.body = body
 

@@ -18,8 +18,10 @@ N = 2
 # Status flag on whether or not the data has been pickled.
 #   - [C_PICKLED]: For whether comments have been pickled.
 #   - [T_PICKLED]: For whether the actual tree has been pickled.
-C_PICKLED = True
+C_PICKLED = False
 T_PICKLED = False
+
+OUTFILE = "comments-overwritten.txt"
 
 # Testing arena for the n-gram comment generation.
 def main(argv):
@@ -34,11 +36,13 @@ def main(argv):
 
   if not C_PICKLED:
     # The list of files to learn the model on.
-    dir = "data/comments/"
-    files = [dir + "2005-12.txt"]
+    datadir = "data/comments/"
+    files = [datadir + "2005-12.txt"]
     for i in range(6,9):
       for j in range(1,13):
-        files.append(dir + "20" + str(i).zfill(2) + "-" + str(j).zfill(2) + ".txt")
+        files.append(datadir + "20" + str(i).zfill(2) + "-" + str(j).zfill(2) + ".txt")
+
+    files = files[0:2]
 
     # Uses OCaml-style composition to create a function from files to comments.
     getComments = (pipe
@@ -52,16 +56,19 @@ def main(argv):
     # Only create the comments once to avoid repeated computation.
     comments = getComments(files)
 
+    spl = int(0.01*len(comments))
+    comments = comments[:spl]
+
     # Dump the comments to a pickle ("jar") for easy re-use.
     print "Pickling comment structure..."
     for _ in tqdm(range(1)):
-      outfile = open('data/comments.pkl', 'wb')
+      outfile = open('data/tr-comments.pkl', 'wb')
       pickle.dump(comments, outfile)
       outfile.close()
   else:
     print "Loading pickled comment structures..."
     for _ in tqdm(range(1)):
-      infile = open('data/comments.pkl', 'r')
+      infile = open('data/tr-comments.pkl', 'r')
       comments = pickle.load(infile)
       infile.close()
 
@@ -75,6 +82,11 @@ def main(argv):
       makeTree = (pipe
         | getUnigrams
         | getRevUniMap
+      )
+    elif N == 2:
+      makeTree = (pipe
+        | getBigrams
+        | getRevBiMap
       )
     else:
       makeTree = (pipe
@@ -100,7 +112,9 @@ def main(argv):
       infile.close()
 
   # Open up a file channel to write the comments to.
-  out = open('comments.txt', 'w')
+  out = open(OUTFILE, 'w')
+
+  tagList = pickle.load(open('tags.pkl', 'r'))
 
   # Generate NUM_COMMENTS comments.
   print "Generating comments..."
@@ -111,11 +125,12 @@ def main(argv):
     # Special case when N = 1: generate a unigram-based comment.
     if N == 1:
       body = makeUniComment(revTree)
+    elif N == 2:
+      body = makeBiComment(revTree, tagList)
     else:
       body = makeNComment(N, revTree)
 
-    comment = Comment(body)
-    out.write(str(comment))
+    out.write(body)
   
   out.write('\n')
   out.close()
