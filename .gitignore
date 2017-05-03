@@ -1,3 +1,6 @@
+# Pickled files
+*.pkl
+
 # System files
 .DS_Store
 Thumbs.db

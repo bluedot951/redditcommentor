@@ -1,7 +1,7 @@
 all: run
 
 run:
-	@python test.py
+	@python main.py
 
 clean:
 	@rm *.pyc

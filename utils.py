@@ -41,7 +41,13 @@ def getTree(n, commentList):
   # Initialize an empty Tree. The initial word is always "root".
   root = Tree("root")
   
-  # Taqadum (`tqdm`) will handle the progress bar.
+  if n == 2:
+    print "Generating bigrams..."
+  elif n == 3:
+    print "Generating trigrams..."
+  else:
+    print "Generating " + str(n) + "-grams..."
+
   for (i, comment) in enumerate(tqdm(commentList)):
     # Generate the list of all possible n-grams (consecutive sublists):
     words = comment.split()
@@ -125,7 +131,8 @@ def getUnigrams(commentList):
   unigrams = {}
   totCount = 0
 
-  for comment in commentList:
+  print "Generating unigrams..."
+  for comment in tqdm(commentList):
     words = comment.split()
     totCount += len(words)
 

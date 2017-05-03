@@ -12,7 +12,7 @@ def makeUniComment(revUniMap):
     c += token + " "
     randNum = random.random()
     key = floorKey(revUniMap, randNum)
-    token = revMap[key]
+    token = revUniMap[key]
 
   # Will always be at least just '', but removes "[SOC]" and " " from string.
   return c[6:-1]

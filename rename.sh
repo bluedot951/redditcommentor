@@ -4,10 +4,11 @@ DIR="data/comments"
 
 for file in $DIR/*.bz2
 do
-  FILE=`echo "$file" | rev | cut -d'/' -f1 | rev`
-  if [[ $FILE == RC_20*.bz2 ]]
+  bzip2 -d $file
+  FILE=`echo "$file" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1`
+  if [[ $FILE == 20* ]]
   then
-    NEWFILE=`echo "$FILE" | cut -d'_' -f2 | cut -d'.' -f1`
+    NEWFILE=`echo "$FILE" | cut -d'_' -f2`
     mv $DIR/$FILE $DIR/$NEWFILE.txt
   fi
 done
