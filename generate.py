@@ -23,56 +23,146 @@ def makeUniComment(revUniMap):
 #   - [revUniMap]: The dictionary where words are mapped to dictionaries of
 #                  probabilities and words.
 def makeBiComment(revBiMap, tagList):
-  c = ""
+  def comp(x, tgElem):
+    xi = 0
+    ti = 0
+    while xi < len(x):
+      if ti == len(tgElem):
+        return False
+      if tgElem[ti] == '.' or tgElem[ti] == ',' or tgElem[ti] == ';':
+        ti += 1
+        continue
+      if tgElem[ti] != x[xi]:
+        return False
+      ti += 1
+      xi += 1
+    return True
 
-  randNum = random.random()
-  key = floorKey(revBiMap["[SOC]"], randNum)
-  token = revBiMap[token][key]
+  def exact(x, tgElem):
+    xi = 0
+    ti = 0
+    while xi <= len(x):
+      if ti == len(tgElem) and xi == len(x):
+        return True
+      status = True
+      for item in tgElem[ti+1:]:
+        status &= (item == '.' or item == ',' or item == ';')
+      if ti == len(tgElem) or xi == len(x):
+        return (status and len(tgElem) > len(x))
+      if tgElem[ti] == '.' or tgElem[ti] == ',' or tgElem[ti] == ';':
+        ti += 1
+        continue
+      if tgElem[ti] != x[xi]:
+        return False
+      ti += 1
+      xi += 1
+    return False
 
-  c += token + " "
+  def regen(x, tgElem, txt):
+    words = txt.split()
+    for i in range(len(tgElem)):
+      if tgElem[i] == '.' or tgElem[i] == ',' or tgElem[i] == ';':
+        words.insert(i, tgElem[i])
+    cmt = " ".join(words)
+    print cmt
+    return cmt
 
-  randNum = random.random()
-  key = floorKey(revBiMap[token], randNum)
-  token = revBiMap[token][key]
+  while True:
+    c = ""
+    token = ""
 
-  c += token + " "
+    randNum = random.random()
+    key = floorKey(revBiMap["[SOC]"], randNum)
+    token = revBiMap["[SOC]"][key]
 
-  tempC = c
+    c += token + " "
 
-  tempTags = nltk.pos_tag(tempC.split())
-  tempTags = [i[1] for i in tempTags]
+    breakout = False
+    while True:
+      randNum = random.random()
+      if token not in revBiMap:
+        breakout = True
+        break
+      key = floorKey(revBiMap[token], randNum)
+      if key in revBiMap[token]:
+        break
+    if breakout:
+      continue
+    token = revBiMap[token][key]
 
-  tagList = filter(lambda x: (x[0] == tempTags[0] and x[1] == tempTags[1]), tagList)
+    c += token + " "
 
-  randNum = random.random()
-  key = floorKey(revBiMap[token], randNum)
-  token = revBiMap[token][key]
-
-  count = 2
-
-
-  while token != ".":
-    print c
-
-    tempC = c + token
+    tempC = c
 
     tempTags = nltk.pos_tag(tempC.split())
     tempTags = [i[1] for i in tempTags]
-    tagList = filter(lambda x: (x[count] == tempTags[count]), tagList)
+
+    oldTagList = tagList
+    tagList = filter(lambda x: comp(tempTags, x), tagList)
 
     if len(tagList) == 0:
-      print "rip"
-      1/0
+      tagList = oldTagList
+      continue
 
-    count += 1
-
-    c += token + " "
-    randNum = random.random()
-    key = floorKey(revBiMap[token], randNum)
+    breakout = False
+    while True:
+      randNum = random.random()
+      if token not in revBiMap:
+        breakout = True
+        break
+      key = floorKey(revBiMap[token], randNum)
+      if key in revBiMap[token]:
+        break
+    if breakout:
+      continue
     token = revBiMap[token][key]
 
-  # Will always be at least just '', but removes "[SOC]" and " " from string.
-  return c[:-1] + "."
+    count = 2
+
+    num_tries = 0
+
+    while True:
+      tempC = c + token
+
+      tempTags = nltk.pos_tag(tempC.split())
+      tempTags = [i[1] for i in tempTags]
+      oldTagList2 = tagList
+
+      tagList = filter(lambda x: comp(tempTags, x), tagList)
+
+      print "token: ", token
+      print "tempC: ", tempC
+      print "tagList: ", tagList
+
+      if len(tagList) == 0:
+        tagList = oldTagList2
+        num_tries += 1
+        if num_tries > 10:
+          tagList = oldTagList
+          break
+        count = 2
+        continue
+
+      count += 1
+
+      c += token + " "
+      breakout = False
+      while True:
+        randNum = random.random()
+        if token not in revBiMap:
+          breakout = True
+          break
+        key = floorKey(revBiMap[token], randNum)
+        if key in revBiMap[token]:
+          break
+      if breakout:
+        break
+      token = revBiMap[token][key]
+
+      for tag in tagList:
+        if exact(tag, tempTags):
+          print (tag, tempTags)
+          return regen(tempTags, tag, c)
 
 # Generates a new comment body based on the N-grams technique using the
 # specified gram-tree. Requires a parameter n <= N to be passed in for the
@@ -100,10 +190,6 @@ def makeNComment(n, tree, tagList):
     # Find the probability associated with the generated word.
     key = floorKey(tempTree.reverseMap, randNum)
     token = tempTree.reverseMap[key].word
-
-    tokenPOS = 
-
-    tagList = 
 
   # Join the list of words to create a sentence.
   return " ".join(c[1:])

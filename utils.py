@@ -41,15 +41,14 @@ def getTree(n, commentList):
   # Initialize an empty Tree. The initial word is always "root".
   root = Tree("root")
   
-  if n == 2:
-    print "Generating bigrams..."
-  elif n == 3:
+  if n == 3:
     print "Generating trigrams..."
   else:
     print "Generating " + str(n) + "-grams..."
-
+  
   for (i, comment) in enumerate(tqdm(commentList)):
     # Generate the list of all possible n-grams (consecutive sublists):
+    
     words = comment.split()
     ngrams = [words[i:i+n] for i in xrange(len(words)-n+1)]
 
@@ -168,7 +167,8 @@ def getBigrams(commentList):
   bigrams = {}
   totCount = 0
 
-  for comment in commentList:
+  print "Generating bigrams..."
+  for comment in tqdm(commentList):
     words = comment.split()
     
     for i in range(len(words)-1):

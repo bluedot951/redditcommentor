@@ -1,0 +1,97 @@
+make profile
+Loading pickled comment structures...
+100%|█████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:44<00:00, 44.40s/it]
+Generating bigrams...
+100%|████████████████████████████████████████████████████████████████████████████| 83650/83650 [13:14<00:00, 105.29it/s]
+Pickling data structures...
+100%|████████████████████████████████████████████████████████████████████████████████████| 1/1 [01:53<00:00, 113.08s/it]
+Generating comments...
+100%|█████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 20.09it/s]
+Running time: 24 m, 36.9262650013 s
+Filename: utils.py
+
+Line #    Mem usage    Increment   Line Contents
+================================================
+    40  217.309 MiB    0.000 MiB   @profile
+    41                             def getTree(n, commentList):
+    42                               # Initialize an empty Tree. The initial word is always "root".
+    43  217.309 MiB    0.000 MiB     root = Tree("root")
+    44                               
+    45  217.309 MiB    0.000 MiB     if n == 2:
+    46  217.309 MiB    0.000 MiB       print "Generating bigrams..."
+    47                               elif n == 3:
+    48                                 print "Generating trigrams..."
+    49                               else:
+    50                                 print "Generating " + str(n) + "-grams..."
+    51                             
+    52 1906.203 MiB 1688.895 MiB     for (i, comment) in enumerate(tqdm(commentList)):
+    53                                 # Generate the list of all possible n-grams (consecutive sublists):
+    54 1906.191 MiB   -0.012 MiB       words = comment.split()
+    55 1906.191 MiB    0.000 MiB       ngrams = [words[i:i+n] for i in xrange(len(words)-n+1)]
+    56                             
+    57                                 # Iterate through the list of all possible n-grams:
+    58 1906.203 MiB    0.012 MiB       for ngram in ngrams:
+    59                                   # Walk down the tree using a referenced pointer.
+    60 1906.203 MiB    0.000 MiB         tempTree = root
+    61                             
+    62 1906.203 MiB    0.000 MiB         for word in ngram:
+    63 1906.203 MiB    0.000 MiB           createSubTree(tempTree, word)
+    64 1906.203 MiB    0.000 MiB           tempTree.forwardMap[word][1] += 1
+    65 1906.203 MiB    0.000 MiB           tempTree = tempTree.forwardMap[word][0]
+    66                             
+    67                               # Return the created Tree, not the referenced pointer.
+    68 1906.203 MiB    0.000 MiB     return root
+
+
+Filename: utils.py
+
+Line #    Mem usage    Increment   Line Contents
+================================================
+    73 1943.664 MiB    0.000 MiB   @profile
+    74                             def normalize(tree):
+    75                             
+    76                               # Basis case.
+    77 1943.664 MiB    0.000 MiB     if len(tree.forwardMap) == 0:
+    78 1943.664 MiB    0.000 MiB       return
+    79                             
+    80                               # Recursive case.
+    81 1943.664 MiB    0.000 MiB     tot = 0
+    82 1943.664 MiB    0.000 MiB     for sub in tree.forwardMap:
+    83 1943.664 MiB    0.000 MiB       tot += tree.forwardMap[sub][1]
+    84                             
+    85                               # Walk down the subtrees and normalize the counts on this level.
+    86 1943.664 MiB    0.000 MiB     for sub in tree.forwardMap:
+    87 1943.664 MiB    0.000 MiB       tree.forwardMap[sub][1] /= float(tot)
+    88                             
+    89                               # Recursively consider the list of subtrees for each subtree on this level.
+    90 1943.664 MiB    0.000 MiB     for sub in tree.forwardMap:
+    91 1943.664 MiB    0.000 MiB       normalize(tree.forwardMap[sub][0])
+    92                             
+    93 1943.664 MiB    0.000 MiB     return tree
+
+
+Filename: utils.py
+
+Line #    Mem usage    Increment   Line Contents
+================================================
+    99 2025.797 MiB    0.000 MiB   @profile
+   100                             def getReverseTree(tree):
+   101                             
+   102                               # Basis case.
+   103 2025.797 MiB    0.000 MiB     if len(tree.forwardMap) == 0:
+   104 2025.797 MiB    0.000 MiB       return
+   105                             
+   106                               # Recursive case.
+   107 2025.797 MiB    0.000 MiB     curProb = 0.0
+   108                             
+   109                               # Walk down the subtrees and fill in the reverse mappings on this level.
+   110 2025.797 MiB    0.000 MiB     for sub in tree.forwardMap:
+   111 2025.797 MiB    0.000 MiB       tree.reverseMap[curProb] = tree.forwardMap[sub][0]
+   112 2025.797 MiB    0.000 MiB       curProb += tree.forwardMap[sub][1]
+   113                             
+   114                               # Recursively consider the list of subtrees for each subtree on this level.
+   115 2025.797 MiB    0.000 MiB     for sub in tree.forwardMap:
+   116 2025.797 MiB    0.000 MiB       getReverseTree(tree.forwardMap[sub][0])
+   117                             
+   118 2025.797 MiB    0.000 MiB     return tree
+
