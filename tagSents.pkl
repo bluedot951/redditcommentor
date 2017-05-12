@@ -1,0 +1,104 @@
+(lp0
+S"_We didn't torture somebody!"
+p1
+aS'Have you read slashdot lately?'
+p2
+aS'will comments dissapear if ranked low enough?'
+p3
+aS"That's just like confetti?"
+p4
+aS'Anyone have any links?'
+p5
+aS'How many Iraqi citizens has he interviewed?'
+p6
+aS'How many members of the insurgency?'
+p7
+aS'and a score of 20 means?'
+p8
+aS'Are you kidding me?'
+p9
+aS'This is a brilliant essay!'
+p10
+aS'Classes that expose data instead of hiding it?'
+p11
+aS'Literally  do unphantomable ideas exist?'
+p12
+aS'thanks for the link!'
+p13
+aS'WTF is Wink  and why should I care?'
+p14
+aS"What Google doesn't want you to see!"
+p15
+aS'What country am I in again?'
+p16
+aS'    what about Consumerism as the new religion?'
+p17
+aS'What was the case about?'
+p18
+aS'Who was being sued  for what?'
+p19
+aS'How is he wrong?'
+p20
+aS'This is five years old?'
+p21
+aS'You know whats procrastination?'
+p22
+aS'Schedule resources more effectively?'
+p23
+aS'Awesome work!!!!!!!'
+p24
+aS'You really think C  Love is THAT original?'
+p25
+aS'To prove how smart they are?'
+p26
+aS'Why people care what languages other people use?'
+p27
+aS'Are generators a good idea?'
+p28
+aS'Are generators a good idea?'
+p29
+aS'What is the reddit secret?'
+p30
+aS'am I willing to pay the consequeces?'
+p31
+aS"What's the reason posting this to reddit?"
+p32
+aS'Why so negative on this one?'
+p33
+aS'I use VIM daily  but vanilla vi?'
+p34
+aS'Do you understand how broken that is?'
+p35
+aS'Well  how did you?'
+p36
+aS'i had to look up that expression!'
+p37
+aS'Know any source code thats worth reading?'
+p38
+aS'What has happened in this country?'
+p39
+aS'C is high level?'
+p40
+aS'Paul   Marvelous essay!!'
+p41
+aS'Well  to answer my own question - YES!'
+p42
+aS'What happened to tackling hard work?'
+p43
+aS'So you are a python fan?'
+p44
+aS'And these guys accuse Marxists of hero worship?'
+p45
+aS'Is software development art or craftmanship?'
+p46
+aS'Different cultures behave differently   So what?'
+p47
+aS'firefox has fewer bugs than IE?'
+p48
+aS"Why don't you do that instead?"
+p49
+aS'What are we  5?'
+p50
+aS'Even Scheme  you say?'
+p51
+a.
