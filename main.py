@@ -10,7 +10,7 @@ from pipetools.utils import foreach
 from tqdm import tqdm
 
 # Number of comments to generate.
-NUM_COMMENTS = 1
+NUM_COMMENTS = 100
 
 # Number of "grams" to use in comment generation.
 N = 2
@@ -18,8 +18,8 @@ N = 2
 # Status flag on whether or not the data has been pickled.
 #   - [C_PICKLED]: For whether comments have been pickled.
 #   - [T_PICKLED]: For whether the actual tree has been pickled.
-C_PICKLED = False
-T_PICKLED = False
+C_PICKLED = True
+T_PICKLED = True
 
 OUTFILE = "comments-overwritten.txt"
 
@@ -37,12 +37,12 @@ def main(argv):
   if not C_PICKLED:
     # The list of files to learn the model on.
     datadir = "data/comments/"
-    files = [datadir + "2005-12.txt"]
-    for i in range(6,9):
-      for j in range(1,13):
-        files.append(datadir + "20" + str(i).zfill(2) + "-" + str(j).zfill(2) + ".txt")
+    files = [datadir + "2008-01.txt"]
+    # for i in range(6,9):
+    #   for j in range(1,13):
+    #     files.append(datadir + "20" + str(i).zfill(2) + "-" + str(j).zfill(2) + ".txt")
 
-    files = files[0:2]
+    files = files[0:1]
 
     # Uses OCaml-style composition to create a function from files to comments.
     getComments = (pipe
@@ -114,11 +114,13 @@ def main(argv):
   # Open up a file channel to write the comments to.
   out = open(OUTFILE, 'w')
 
-  tagList = pickle.load(open('tags.pkl', 'r'))
+  tagList = pickle.load(open('tags2.pkl', 'r'))
+  sentList = pickle.load(open('tagSents2.pkl', 'r'))
 
   # Generate NUM_COMMENTS comments.
   print "Generating comments..."
-  for i in tqdm(range(NUM_COMMENTS)):
+  # for i in tqdm(range(NUM_COMMENTS)):
+  for i in range(NUM_COMMENTS):
     # Initially, the body is empty.
     body = None
 
@@ -126,13 +128,12 @@ def main(argv):
     if N == 1:
       body = makeUniComment(revTree)
     elif N == 2:
-      body = makeBiComment(revTree, tagList)
+      body = makeBiComment2(revTree, tagList, sentList)
     else:
       body = makeNComment(N, revTree)
 
     out.write(body)
-  
-  out.write('\n')
+    out.write('\n')
   out.close()
 
   # End the timer.

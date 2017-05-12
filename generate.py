@@ -18,6 +18,144 @@ def makeUniComment(revUniMap):
   # Will always be at least just '', but removes "[SOC]" and " " from string.
   return c[6:-1]
 
+
+def extendComment(c, token, tagList, revBiMap, targetTag, curInd):
+  count = 0
+  doesMatch = False
+
+  alreadyTried = set()
+
+  while True:
+    randNum = random.random()
+    if token not in revBiMap:
+      return None
+    key = floorKey(revBiMap[token], randNum)
+    nextTok = revBiMap[token][key]
+    if len(alreadyTried) > 0.5 * len(revBiMap[token]):
+      print "giving up"
+      return None
+    if nextTok in alreadyTried:
+      continue
+    # print "nextTok", nextTok
+
+    tempSent = c + nextTok
+
+    myTags = nltk.pos_tag(tempSent.split(" "))
+
+
+    tags = [tag[1] for tag in myTags]
+
+    # print tags
+    # print targetTag
+
+
+    if tags[curInd] == targetTag[curInd]:
+      c += nextTok + " "
+      tok = nextTok
+      doesMatch = True
+      break
+    else:
+      alreadyTried.add(nextTok)
+
+  return c, tok
+
+def makeBiComment2(revBiMap, tagList, sentList):
+  def comp(x, tgElem):
+    xi = 0
+    ti = 0
+    while xi < len(x):
+      if ti == len(tgElem):
+        return False
+      if tgElem[ti] == '.' or tgElem[ti] == ',' or tgElem[ti] == ';':
+        ti += 1
+        continue
+      if tgElem[ti] != x[xi]:
+        return False
+      ti += 1
+      xi += 1
+    return True
+  while(True):
+    while(True):
+
+      tagInd = random.randint(0, len(tagList) - 1)
+
+      targetTag = tagList[tagInd]
+
+      count = 0
+
+      while(True):
+        c = ""
+
+        token = "[SOC]"
+
+        randNum = random.random()
+        key = floorKey(revBiMap[token], randNum)
+        token = revBiMap[token][key]
+
+        c += token + " "
+
+        if token not in revBiMap:
+          continue
+
+        randNum = random.random()
+        key = floorKey(revBiMap[token], randNum)
+        token = revBiMap[token][key]
+
+        c += token + " "
+
+        # print c
+
+        myTags = nltk.pos_tag(c.split(" ")[:-1])
+
+
+        tags = [tag[1] for tag in myTags]
+
+        # print tags, targetTag
+
+
+        # doesMatch = comp(targetTag, tags)
+        doesMatch = targetTag[0] == tags[0] and targetTag[1] == tags[1]
+
+        # print doesMatch
+
+        if doesMatch:
+          break
+
+        count += 1
+        if count > 100:
+          # print "out of time...\n\n\n"
+          break
+      if doesMatch:
+        break
+
+      # print c
+
+    print "Generating a comment with grammar:", tagList[tagInd]
+    print "Grammar based off of:", sentList[tagInd]
+
+    print c
+    print tags
+
+    curInd = 2
+
+    giveUpCount = 0
+    for curInd in range(2, len(targetTag)):
+      out = extendComment(c, token, tagList, revBiMap, targetTag, curInd)
+      if out == None:
+        giveUpCount += 1
+        break
+      else:
+        if curInd == len(targetTag) - 1:
+          return c
+      c, tok = out
+      if targetTag[curInd+1] == '.':
+        c += "."
+        print c
+        return c
+      print c
+
+  return "hello"
+
 # Generates a new comment body based on the bigrams technique using the
 # specified bigram reverse-mapping dictionary.
 #   - [revUniMap]: The dictionary where words are mapped to dictionaries of
