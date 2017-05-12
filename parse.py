@@ -41,18 +41,20 @@ def getData(files):
   strData = []
   
   print "Parsing files..."
-  for file in tqdm(files):
-    with open(file, "r") as myf:
-      tempStrData = myf.read().split("\n")[:-1]
-      strData.extend(tempStrData)
-  
-  jsonData = '[' + ','.join(strData) + ']'
-  
-  try:
-    data = json.loads(jsonData)
-    return data
-  except:
-    raise ParseError("There was an error in decoding one of the input files.")
+  for myfs in tqdm(files):
+    #with open(file, "r") as myf:
+    #  tempStrData = myf.read().split("\n")[:-1]
+    #  strData.extend(tempStrData)
+    myf = open(myfs, "r").read()
+
+  #jsonData = '[' + ','.join(strData) + ']'
+  #jsonData = strData
+
+    try:
+      data = json.loads(myf)
+      return data
+    except:
+      raise ParseError("There was an error in decoding one of the input files.")
 
 # Converts the specified JSON object into a UTF-8 compatible equivalent.
 #   - [data]: The JSON object to map from Unicode to UTF-8.

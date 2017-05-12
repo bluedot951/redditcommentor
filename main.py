@@ -1,5 +1,6 @@
 import sys
 import time
+import datetime
 import pickle
 
 from parse import *
@@ -11,6 +12,7 @@ from tqdm import tqdm
 
 # Number of comments to generate.
 NUM_COMMENTS = 100
+SUBREDDIT = "science"
 
 # Number of "grams" to use in comment generation.
 N = 2
@@ -18,10 +20,11 @@ N = 2
 # Status flag on whether or not the data has been pickled.
 #   - [C_PICKLED]: For whether comments have been pickled.
 #   - [T_PICKLED]: For whether the actual tree has been pickled.
-C_PICKLED = True
-T_PICKLED = True
+C_PICKLED = False
+T_PICKLED = False
 
-OUTFILE = "comments-overwritten.txt"
+tm = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d-%H-%M-%S')
+OUTFILE = "profiling/comments-" + tm + ".txt"
 
 # Testing arena for the n-gram comment generation.
 def main(argv):
@@ -37,12 +40,8 @@ def main(argv):
   if not C_PICKLED:
     # The list of files to learn the model on.
     datadir = "data/comments/"
-    files = [datadir + "2008-01.txt"]
-    # for i in range(6,9):
-    #   for j in range(1,13):
-    #     files.append(datadir + "20" + str(i).zfill(2) + "-" + str(j).zfill(2) + ".txt")
-
-    files = files[0:1]
+    # subreddits = ["AskReddit", "news", "science", "aww", "television"]
+    files = [datadir + SUBREDDIT + "-2010-01.txt"]
 
     # Uses OCaml-style composition to create a function from files to comments.
     getComments = (pipe
@@ -56,19 +55,16 @@ def main(argv):
     # Only create the comments once to avoid repeated computation.
     comments = getComments(files)
 
-    spl = int(0.01*len(comments))
-    comments = comments[:spl]
-
     # Dump the comments to a pickle ("jar") for easy re-use.
     print "Pickling comment structure..."
     for _ in tqdm(range(1)):
-      outfile = open('data/tr-comments.pkl', 'wb')
+      outfile = open('data/' + SUBREDDIT + '-tr-comments.pkl', 'wb')
       pickle.dump(comments, outfile)
       outfile.close()
   else:
     print "Loading pickled comment structures..."
     for _ in tqdm(range(1)):
-      infile = open('data/tr-comments.pkl', 'r')
+      infile = open('data/' + SUBREDDIT + '-tr-comments.pkl', 'r')
       comments = pickle.load(infile)
       infile.close()
 
@@ -101,21 +97,21 @@ def main(argv):
     # Dump the structure to a pickle ("jar") for easy re-use.
     print "Pickling data structures..."
     for _ in tqdm(range(1)):
-      outfile = open('data/' + str(N) + '-grams.pkl', 'wb')
+      outfile = open('data/' + SUBREDDIT + '-' + str(N) + '-grams.pkl', 'wb')
       pickle.dump(revTree, outfile)
       outfile.close()
   else:
     print "Loading pickled data structures..."
     for _ in tqdm(range(1)):
-      infile = open('data/' + str(N) + '-grams.pkl', 'r')
+      infile = open('data/' + SUBREDDIT + '-' + str(N) + '-grams.pkl', 'r')
       revTree = pickle.load(infile)
       infile.close()
 
   # Open up a file channel to write the comments to.
   out = open(OUTFILE, 'w')
 
-  tagList = pickle.load(open('tags2.pkl', 'r'))
-  sentList = pickle.load(open('tagSents2.pkl', 'r'))
+  tagList = pickle.load(open('data/tags2.pkl', 'r'))
+  sentList = pickle.load(open('data/tagSents2.pkl', 'r'))
 
   # Generate NUM_COMMENTS comments.
   print "Generating comments..."
@@ -128,7 +124,7 @@ def main(argv):
     if N == 1:
       body = makeUniComment(revTree)
     elif N == 2:
-      body = makeBiComment2(revTree, tagList, sentList)
+      body = makeBiComment(revTree, tagList, sentList)
     else:
       body = makeNComment(N, revTree)
 

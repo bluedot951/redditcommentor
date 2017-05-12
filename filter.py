@@ -1,8 +1,8 @@
 from parse import *
 
-files = ["2008-01.txt"]
+files = ["2010-01.txt"]
 
-interestingSubreddits = ["sports", "AskReddit", "gsaming", "javascript", "news"]
+interestingSubreddits = ["AskReddit", "news", "science", "aww", "television"]
 
 allsubreddits = set()
 
